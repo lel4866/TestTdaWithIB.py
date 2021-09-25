@@ -16,11 +16,13 @@ from tda.orders.options import OptionSymbol
 from tda.orders.common import OrderType
 from tda.orders.generic import OrderBuilder
 
+from testib import TestIB
+
 api_key = 'RUM4KIDS@AMER.OAUTHAP'  # also known as consumer key: url-encoded: RUM4KIDS%40AMER.OAUTHAP
 data_account_number = 490586653  # account for lel4866b - to get real-time data
 order_account_number = 493991357  # account for lel4866c - to place orders and get account positions
-token_path_lel4866b = 'C:/Users/lel48/PycharmProjects/TdaApiTest/lel4866b.txt'  # for quotes
-token_path_lel4866c = 'C:/Users/lel48/PycharmProjects/TdaApiTest/lel4866c.txt'  # for orders
+token_path_lel4866b = 'C:/Users/lel48/PycharmProjects/TestTdaWithIB.py/lel4866b.txt'  # for quotes
+token_path_lel4866c = 'C:/Users/lel48/PycharmProjects/TestTdaWithIB.py/lel4866c.txt'  # for orders
 
 # This only needs to be done once
 def get_auth_token(token_path: str) -> bool:
@@ -476,4 +478,8 @@ if __name__ == '__main__':
         if (not rc):
             exit(-1)
         place_order(order_account_number)
+
+    app = TestIB()
+    app.nextOrderId = 0
+
 
