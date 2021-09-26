@@ -24,6 +24,7 @@ order_account_number = 493991357  # account for lel4866c - to place orders and g
 token_path_lel4866b = 'C:/Users/lel48/PycharmProjects/TestTdaWithIB.py/lel4866b.txt'  # for quotes
 token_path_lel4866c = 'C:/Users/lel48/PycharmProjects/TestTdaWithIB.py/lel4866c.txt'  # for orders
 
+
 # This only needs to be done once
 def get_auth_token(token_path: str) -> bool:
     if not os.path.exists(token_path):
@@ -121,7 +122,7 @@ def get_option_chain(client: tda.client.Client, symbol: str) -> bool:
     s47 = strikes['pennyPilot']  # bool
 
     return True
-    pass
+
 
 def quote_handler(msg):
     yy = msg['content']
@@ -167,6 +168,7 @@ async def read_stream(stream_client, equities_quote_list, futures_quote_list, op
 
     print("*** end of read_stream() ***\n")
 
+
 def get_streaming_quotes(account: str, client) -> None:
     # process command line arguments which specify symbols
     equities_quote_list = []
@@ -195,6 +197,7 @@ def get_streaming_quotes(account: str, client) -> None:
     # *** never gets here! ***
     print("*** end of event_loop() ***\n")
 
+
 def place_option_order(data_client: tda.client.Client, account: str, order: list):
     # legs is a list of options
     # each option is a dict with keys: symbol, quantity, expiration_date, type, strike;
@@ -220,7 +223,6 @@ def place_option_order(data_client: tda.client.Client, account: str, order: list
         if not prices_changed:
             break
         prices_changed = False
-
 
 
 def get_option_price(data_client: tda.client.Client, option) -> (float, float):
@@ -361,6 +363,7 @@ def place_order(account: str) -> bool:
     # *** never gets here! ***
     print("*** end of get_event_loop() ***\n")
 
+
 def check_order_entry(order_id):
     print(f"check_order_entry called. order_id={order_id}")
     asyncio.get_event_loop().call_later(2.0, check_order_entry, order_id)
@@ -379,6 +382,7 @@ def actually_do_order(account, c, order_spec):
     print(f"Order placed. order id = {order_id}\n")
     return True, order_id
 
+
 def printOption(msg):
     print("*** option handler message: ***")
     return
@@ -392,6 +396,7 @@ def printOption(msg):
     print(json.dumps(msg, indent=4))
     print("\n")
     xxx = 1
+
 
 def print_account_activity(msg):
     print("*** account_activity message: ***")
@@ -416,6 +421,7 @@ def print_account_activity(msg):
     #print(json.dumps(msg, indent=4))
     #print("\n")
 
+
 def printGoog(msg):
     print(json.dumps(msg, indent=4))
     print("\n")
@@ -423,6 +429,7 @@ def printGoog(msg):
     zz = yy[0]
     ww = zz['DESCRIPTION']
     xxx = 1
+
 
 class Timer:
     def __init__(self, timeout, callback):
@@ -458,7 +465,7 @@ if __name__ == '__main__':
     #opt_sym1 = OptionSymbol('SPX', datetime.date(year=2021, month=10, day=14), 'P', '4400')
 
     order = [{'symbol': 'SPX', 'expiration_date': datetime.date(2022, 3, 18), 'type': 'P', 'strike': '4400'}]
-    place_option_order(data_client, data_account_number, order)
+    #place_option_order(data_client, data_account_number, order)
     # opt_sym_struct = OptionSymbol(order[0]['symbol'], order[0]['expiration_date'], order[0]['type'], order[0]['strike'])
     # opt_string = opt_sym_struct.build()  # SPX_101521P4400: 10/15/2021 SPX Put at strike of 4400
     # response = data_client.get_quote(opt_string)
