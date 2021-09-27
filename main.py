@@ -212,6 +212,62 @@ def quote_handler(msg, ok_to_trade_event):
         # print(quote['key'], " ", quote['LAST_PRICE'])
         print(quote)
 
+
+def get_streaming_quotes(account: str, client) -> None:
+    # process command line arguments which specify symbols
+    equities_quote_list = []
+    futures_quote_list = []
+    options_quote_list = []
+    opt_list = sys.argv[1:]
+    for symbol in opt_list:
+        if symbol[0] == '/':
+            futures_quote_list.append(symbol)
+        elif symbol.find('-') >= 0:
+            # it's an option symbol
+            fields = symbol.split('-')
+            opt_month = int(fields[1])
+            opt_day = int(fields[2])
+            opt_year = int(fields[3])
+            opt_date = datetime.date(opt_year, opt_month, opt_day)
+            opt_sym_struct = OptionSymbol(fields[0], opt_date, fields[5], fields[4])
+            opt_string = opt_sym_struct.build()   # a string - example: 'SPXW_110220P2100'
+            options_quote_list.append(opt_string)
+        else:
+            equities_quote_list.append(symbol)
+
+    stream_client = StreamClient(client, account_id=account)
+    event_loop = asyncio.get_event_loop()
+    event_loop.run_until_complete(read_stream(stream_client, equities_quote_list, futures_quote_list, options_quote_list))
+    # *** never gets here! ***
+    print("*** end of event_loop() ***\n")
+
+
+def place_option_order(data_client: tda.client.Client, account: str, order: list):
+    # legs is a list of options
+    # each option is a dict with keys: symbol, quantity, expiration_date, type, strike;
+    # values are all strings (including strike), except for quantity, which is signed int, and expiration_date which is
+    # a datetime.date
+    # places order, saves opt_string in orders dict (under key 'opt_string')
+
+    # wait until we get 2 requests over 10 seconds with same bid/ask
+    bid_ask_list = [] # will have 1 item per leg
+    for leg in order:
+        bid, ask = get_option_price(data_client, leg)
+        bid_ask_list.append((bid, ask))
+    time.sleep(10)
+
+    prices_changed = False
+    while True:
+        for i, leg in enumerate(order):
+            bid_ask = get_option_price(data_client, leg)
+            if bid_ask != bid_ask_list[i]:
+                prices_changed = True
+                bid_ask_list[i] = bid_ask
+
+        if not prices_changed:
+            break
+        prices_changed = False
+
     ok_to_trade_event.set()
 
 
@@ -316,7 +372,7 @@ def place_stock_order(account: str) -> bool:
         await stream_client.quality_of_service(StreamClient.QOSLevel.EXPRESS)
 
         # always add handlers before subscribing
-        stream_client.add_account_activity_handler(lambda msg: print_account_activity(msg))
+        stream_client.add_account_activity_handler(lambda msg: account_activity(msg))
         stream_client.add_level_one_option_handler(lambda msg: printOption(msg))
         # stream_client.add_timesale_options_handler(lambda msg: printGoog(msg))
         # stream_client.add_timesale_equity_handler(lambda msg: printGoog(msg))
@@ -360,6 +416,7 @@ def check_order_entry(order_id):
 # async def timeout_callback():
 #     await asyncio.sleep(0.1)
 #     print('echo!')
+
 
 def actually_do_order(account, c, order_spec):
     res = c.place_order(account, order_spec)
@@ -453,6 +510,8 @@ def select_sttbwb_plus_bsh_options(data_client: tda.client.Client) -> list[dict]
 def place_stt_order(options_list: list[dict]):
     assert len(options_list) > 0
 
+    #order = [{'symbol': 'SPX', 'expiration_date': datetime.date(2022, 3, 18), 'type': 'P', 'strike': '4400'}]
+    #place_option_order(data_client, data_account_number, order)
     # opt_sym_struct = OptionSymbol(order[0]['symbol'], order[0]['expiration_date'], order[0]['type'], order[0]['strike'])
     # opt_string = opt_sym_struct.build()  # SPX_101521P4400: 10/15/2021 SPX Put at strike of 4400
     # response = data_client.get_quote(opt_string)
